@@ -454,12 +454,16 @@ def main():
     args = p.parse_args()
 
     console = Console()
-    host = args.host or os.environ.get("SHADOWNET_HOST")
-    if not host:
-        host = console.input("[#00ff00]└─[/] [#00ff00]Server IP[/] [#00ff00]:[/] ").strip()
-    port = args.port or (lambda x: int(x) if x else DEFAULT_PORT)(
-        os.environ.get("SHADOWNET_PORT") or console.input(f"[#00ff00]└─[/] [#00ff00]Port[/] [#00ff00]({DEFAULT_PORT})[/] [#00ff00]:[/] ").strip()
-    )
+    try:
+        host = args.host or os.environ.get("SHADOWNET_HOST")
+        if not host:
+            host = console.input("[#00ff00]└─[/] [#00ff00]Server IP[/] [#00ff00]:[/] ").strip()
+        port = args.port or (lambda x: int(x) if x else DEFAULT_PORT)(
+            os.environ.get("SHADOWNET_PORT") or console.input(f"[#00ff00]└─[/] [#00ff00]Port[/] [#00ff00]({DEFAULT_PORT})[/] [#00ff00]:[/] ").strip()
+        )
+    except KeyboardInterrupt:
+        print("\n└─ Connection cancelled.")
+        return
 
     ShadowClient(host=host, port=port).run()
 
