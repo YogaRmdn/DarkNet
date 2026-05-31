@@ -59,5 +59,3 @@ python darknet.py --host <server_ip> --port <port>
 
 Chat logs are stored in the `logs/` directory with daily rotation.
 
-## Screenshot
-![DarkNet](ss.png)
