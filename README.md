@@ -31,7 +31,7 @@ python darknet.py
 ```
 
 You will be prompted for the server IP and port. Defaults:
-- **Host:** `103.253.244.85`
+- **Host:** `xx.xx.xx`
 - **Port:** `55555`
 
 You can also pass them as arguments:
