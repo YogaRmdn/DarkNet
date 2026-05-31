@@ -73,19 +73,22 @@ class ChatUI:
 ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝   ╚═╝
 """
 
-    def banner(self):
+    def printLogo(self):
         from rich.text import Text
-        t = Text(self.BANNER, style="bold bright_green")
-        t.append("\n ┌──", style="bright_green")
+        t = Text(self.BANNER, style="bold bright_cyan")
+        t.append("\n ┌──", style="bright_red")
         t.append(" DARKNET v" + VERSION, style="bright_yellow")
-        t.append(" :: ", style="bright_green")
+        t.append(" :: ", style="bright_red")
         t.append("internet on the internet", style="bright_cyan")
-        t.append("\n ├─", style="bright_green")
+        t.append("\n ├─", style="bright_red")
         t.append(" https://github.com/YogaRmdn", style="bright_cyan")
-        t.append("\n └──", style="bright_green")
+        t.append("\n └──", style="bright_red")
         t.append(" Developed by Bangyog", style="bright_yellow")
-        t.append("\n", style="bright_green")
+        t.append("\n", style="bright_red")
         self.console.print(t)
+
+    def banner(self):
+        self.printLogo()
 
     def out(self, text):
         pt(text)
