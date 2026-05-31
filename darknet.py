@@ -14,23 +14,23 @@ from datetime import datetime
 from rich.console import Console
 from rich.table import Table
 from rich.markup import escape
-from prompt_toolkit import PromptSession, print_formatted_text
+from prompt_toolkit import PromptSession, print_formatted_text, prompt
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
-from prompt_toolkit.completion import WordCompleter
+from prompt_toolkit.completion import WordCompleter, Completer, Completion
 from prompt_toolkit.patch_stdout import patch_stdout
 from prompt_toolkit.styles import Style
 
 
 VERSION = "1.0"
-UPDATE_URL = ""
+UPDATE_URL = "https://raw.githubusercontent.com/YogaRmdn/DarkNet/main/darknet.py"
 DEFAULT_HOST = ""
 DEFAULT_PORT = 55555
 
 USER_COLORS = [
-    "cyan", "green", "yellow", "magenta", "blue", "red",
-    "ansicyan", "ansigreen", "ansiyellow", "ansimagenta", "ansiblue", "ansired",
+    "bright_green", "bright_cyan", "bright_yellow", "green", "cyan", "yellow",
+    "bright_magenta", "bright_red",
 ]
 
 
@@ -65,36 +65,26 @@ class ChatUI:
         self.online_users = []
 
     BANNER = """
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡰⠚⠉⠀⠀⠉⠑⢦⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⠞⠀⠀⠀⠀⠀⠀⠀⠀⠱⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⢀⠏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠹⡀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⡜⠀⠀⠀⠀⠀⣀⣀⠀⠀⠀⠀⠀⢣⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⡇⠀⣠⠔⠋⠉⣩⣍⠉⠙⠢⣄⠀⢸⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⢧⡜⢏⠓⠒⠚⠁⠈⠑⠒⠚⣹⢳⡸⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠘⣆⠸⡄⠀⠀⠀⠀⠀⠀⢠⠇⣰⠃⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⢀⡴⠚⠉⢣⡙⢦⡀⠀⠀⢀⡰⢋⡜⠉⠓⠦⣀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⡴⠁⢀⣀⣀⣀⣙⣦⣉⣉⣋⣉⣴⣋⣀⣀⣀⡀⠈⢧⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⡸⠁⠀⢸⠀⠀⠀⠀⢀⣔⡛⠛⡲⡀⠀⠀⠀⠀⡇⠀⠈⢇⠀⠀⠀⠀
-⠀⠀⠀⢠⠇⠀⠀⠸⡀⠀⠀⠀⠸⣼⠽⠯⢧⠇⠀⠀⠀⠀⡇⠀⠀⠘⡆⠀⠀⠀
-⠀⠀⠀⣸⠀⠀⠀⠀⡇⠀⠀⠀⠳⢼⡦⢴⡯⠞⠀⠀⠀⢰⠀⠀⠀⠀⢧⠀⠀⠀
-⠀⠀⠀⢻⠀⠀⠀⠀⡇⠀⠀⠀⢀⡤⠚⠛⢦⣀⠀⠀⠀⢸⠀⠀⠀⠀⡼⠀⠀⠀
-⠀⠀⠀⠈⠳⠤⠤⣖⣓⣒⣒⣒⣓⣒⣒⣒⣒⣚⣒⣒⣒⣚⣲⠤⠤⠖⠁⠀⠀⠀
-⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀
+██████╗  █████╗ ██████╗ ██╗  ██╗███╗   ██╗███████╗████████╗
+██╔══██╗██╔══██╗██╔══██╗██║ ██╔╝████╗  ██║██╔════╝╚══██╔══╝
+██║  ██║███████║██████╔╝█████╔╝ ██╔██╗ ██║█████╗     ██║
+██║  ██║██╔══██║██╔══██╗██╔═██╗ ██║╚██╗██║██╔══╝     ██║
+██████╔╝██║  ██║██║  ██║██║  ██╗██║ ╚████║███████╗   ██║
+╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝   ╚═╝
 """
 
     def banner(self):
         from rich.text import Text
-        t = Text(self.BANNER, style="bold red")
-        t.append("\n[+] ", style="bold yellow")
-        t.append("DARKNET", style="bold red")
-        t.append(" : ", style="bold white")
-        t.append("internet on the internet", style="bold green")
-        t.append("\n[+] ", style="bold yellow")
-        t.append("https://github.com/YogaRmdn", style="bold blue")
-        t.append("\n[+] ", style="bold yellow")
-        t.append("Develop by Bangyog", style="bold magenta")
-        t.append("\n", style="bold cyan")
+        t = Text(self.BANNER, style="bold bright_green")
+        t.append("\n ┌──", style="bright_green")
+        t.append(" DARKNET v" + VERSION, style="bright_yellow")
+        t.append(" :: ", style="bright_green")
+        t.append("internet on the internet", style="bright_cyan")
+        t.append("\n ├─", style="bright_green")
+        t.append(" https://github.com/YogaRmdn", style="bright_cyan")
+        t.append("\n └──", style="bright_green")
+        t.append(" Developed by Bangyog", style="bright_yellow")
+        t.append("\n", style="bright_green")
         self.console.print(t)
 
     def out(self, text):
@@ -102,54 +92,92 @@ class ChatUI:
 
     def system(self, msg, ts=None):
         ts = ts or datetime.now().strftime("%H:%M:%S")
-        self.out(f"<dim>{ts}</dim> <b><green>⚡</green></b> <green>{_e(msg)}</green>")
+        self.out(f"<dim><style fg='#00aa00'>{ts}</style></dim> <b><style fg='#00ff00'>[>]</style></b> <style fg='#00ff00'>{_e(msg)}</style>")
 
-    def message(self, user, content, ts, room=None, color="cyan"):
-        t = f"<dim>{ts}</dim>"
+    def message(self, user, content, ts, room=None, color="bright_green"):
+        t = f"<dim><style fg='#00aa00'>{ts}</style></dim>"
         u = f"<b><{color}>{_e(user)}</{color}></b>"
-        r = f" <dim>({room})</dim>" if room and room != self.current_room else ""
+        r = f" <dim><style fg='#00aa00'>({room})</style></dim>" if room and room != self.current_room else ""
         self.out(f"{t}{r} {u}: {_e(content)}")
 
     def private(self, from_user, content, ts, sent=False):
-        t = f"<dim>{ts}</dim>"
-        tag = "<b><magenta>✉ PM -&gt;</magenta></b>" if sent else "<b><magenta>✉ PM &lt;-</magenta></b>"
-        u = f"<b><yellow>{_e(from_user)}</yellow></b>"
-        self.out(f"{t} {tag} {u}: {_e(content)}")
+        t = f"<dim><style fg='#00aa00'>{ts}</style></dim>"
+        arrow = "<b><cyan>[-&gt;]</cyan></b>" if sent else "<b><cyan>[&lt;-]</cyan></b>"
+        tag = "<b><bright_yellow>PRIVATE</bright_yellow></b>"
+        u = f"<b><bright_green>{_e(from_user)}</bright_green></b>"
+        self.out(f"{t} {arrow} {tag} {u}: <bright_cyan>{_e(content)}</bright_cyan>")
 
     def error(self, msg):
-        self.out(f"<b><red>✗</red></b> <red>{_e(msg)}</red>")
+        self.out(f"<b><bright_red>[!]</bright_red></b> <bright_red>{_e(msg)}</bright_red>")
 
     def info(self, msg):
-        self.out(f"<b><green>ℹ</green></b> <green>{_e(msg)}</green>")
+        self.out(f"<b><bright_green>[*]</bright_green></b> <bright_green>{_e(msg)}</bright_green>")
 
     def users(self, users):
         if not users:
-            self.out("<yellow>No users online</yellow>")
+            self.out("<yellow>[!] No users online</yellow>")
         else:
-            ul = ", ".join(f"<cyan>{_e(u)}</cyan>" for u in users)
-            self.out(f"<b>Online</b> (<green>{len(users)}</green>): {ul}")
+            ul = ", ".join(f"<bright_green>{_e(u)}</bright_green>" for u in users)
+            self.out(f"<b><style fg='#00ff00'>ONLINE</style></b> (<bright_green>{len(users)}</bright_green>): {ul}")
 
     def rooms(self, rooms, current):
-        self.out("<b><cyan>Rooms:</cyan></b>")
+        self.out("<b><style fg='#00ff00'>ROOMS:</style></b>")
         for r in rooms:
-            s = "<b><green>● ACTIVE</green></b>" if r == current else "<dim>○</dim>"
-            self.out(f"  {s} <cyan>#{r}</cyan>")
+            s = "<b><bright_green>●</bright_green></b>" if r == current else "<dim><style fg='#005500'>○</style></dim>"
+            self.out(f"  {s} <bright_green>#{r}</bright_green>")
 
     def joined(self, room, members=None):
-        self.out(f"<b><green>✓ Joined</green></b> <cyan>#{_e(room)}</cyan>")
+        self.out(f"<b><bright_green>[+]</bright_green></b> <bright_green>Joined #{_e(room)}</bright_green>")
         if members:
-            ml = ", ".join(f"<cyan>{_e(m)}</cyan>" for m in members)
-            self.out(f"  <dim>Members: {ml}</dim>")
+            ml = ", ".join(f"<bright_green>{_e(m)}</bright_green>" for m in members)
+            self.out(f"  <dim><style fg='#00aa00'>Members: {ml}</style></dim>")
 
     def left(self, room):
-        self.out(f"<b><yellow>← Left</yellow></b> <cyan>#{_e(room)}</cyan>")
+        self.out(f"<b><bright_yellow>[-]</bright_yellow></b> <bright_yellow>Left #{_e(room)}</bright_yellow>")
 
     def nick(self, old, new):
-        self.out(f"<b><yellow>✎</yellow></b> <cyan>{_e(old)}</cyan> → <b><cyan>{_e(new)}</cyan></b>")
+        self.out(f"<b><bright_yellow>[*]</bright_yellow></b> <bright_green>{_e(old)}</bright_green> → <b><bright_green>{_e(new)}</bright_green></b>")
+
+    HELP_TEXT = """
+[bright_green]┌──────────────────────────────────────────┐[/]
+[bright_green]│[/]  [bold bright_yellow]DARKNET — AVAILABLE COMMANDS[/]          [bright_green]│[/]
+[bright_green]└──────────────────────────────────────────┘[/]
+
+  [bold bright_green]/help[/]        [bright_white]Show this help[/bright_white]
+  [bold bright_green]/users[/]       [bright_white]Show online users[/bright_white]
+  [bold bright_green]/msg <user>[/]  [bright_white]Send a private message[/bright_white]
+  [bold bright_green]/join <room>[/] [bright_white]Join a chat room[/bright_white]
+  [bold bright_green]/rooms[/]       [bright_white]List available rooms[/bright_white]
+  [bold bright_green]/create <room>[/] [bright_white]Create a new room[/bright_white]
+  [bold bright_green]/nick <name>[/] [bright_white]Change your username[/bright_white]
+  [bold bright_green]/clear[/]       [bright_white]Clear the screen[/bright_white]
+  [bold bright_green]/update[/]      [bright_white]Auto-update from remote URL[/bright_white]
+  [bold bright_green]/exit[/]        [bright_white]Disconnect and exit[/bright_white]
+
+[bright_black]Tip: Just type a message and press Enter to broadcast it.[/]
+"""
 
 
 def _e(text):
     return str(text).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+# ==================== COMPLETER ====================
+
+class CommandCompleter(Completer):
+    def __init__(self):
+        self.commands = [
+            "/help", "/users", "/msg", "/join", "/rooms",
+            "/nick", "/create", "/clear", "/update", "/exit"
+        ]
+
+    def get_completions(self, document, complete_event):
+        text = document.text_before_cursor
+        if not text.startswith("/"):
+            return
+        for cmd in self.commands:
+            if cmd.startswith(text):
+                yield Completion(cmd, start_position=-len(text))
 
 
 # ==================== CLIENT ====================
@@ -196,7 +224,7 @@ class ShadowClient:
             recv.start()
 
             while self._running:
-                username = input(" Enter your username: ").strip()
+                username = self.ui.console.input("[#00ff00]└─[/] [#00ff00]Username[/] [#00ff00]:[/] ").strip()
                 if not username:
                     continue
                 if not username.replace("_", "").isalnum():
@@ -206,22 +234,39 @@ class ShadowClient:
                     self.ui.error("Username too long (max 20)")
                     continue
 
-                self.auth_event.clear()
-                self.auth_error = ""
-                self.send({"type": "auth", "username": username})
+                password = prompt(HTML("<style fg='#00ff00'>└─</style> <style fg='#00ff00'>Password</style> <style fg='#00ff00'>:</style> "), is_password=True).strip()
+                if password != "whoami":
+                    self.ui.error("Access denied: invalid password")
+                    continue
 
-                if self.auth_event.wait(timeout=15):
-                    if self.auth_error:
-                        self.ui.error(self.auth_error)
-                    else:
-                        self.username = username
-                        self.ui.username = username
-                        self.ui.info(f"Welcome, {username}! Type /help for commands.")
+                authenticated = False
+                while self._running:
+                    self.auth_event.clear()
+                    self.auth_error = ""
+                    self.send({"type": "auth", "username": username})
+
+                    if not self.auth_event.wait(timeout=15):
+                        self.ui.error("Authentication timed out")
                         break
-                else:
-                    self.ui.error("Authentication timed out")
-            else:
-                return
+
+                    if self.auth_error:
+                        if "taken" in self.auth_error.lower():
+                            time.sleep(0.5)
+                            continue
+                        self.ui.error(self.auth_error)
+                        break
+
+                    authenticated = True
+                    self.username = username
+                    self.ui.username = username
+                    self.ui.info(f"Welcome, {username}! Type /help for commands.")
+                    self.ui.console.print("[#005500]═" * 50 + "[/]")
+                    self.ui.console.print("[bold #00ff00]  CONNECTION ESTABLISHED  >>  [/][#00aa00]encrypted[/]  [bold #00ff00]>>[/]  [#005500]DARKNET[/]")
+                    self.ui.console.print(f"[#005500]═[/]" * 50)
+                    break
+
+                if authenticated:
+                    break
 
             self._send_loop()
 
@@ -335,13 +380,11 @@ class ShadowClient:
             self.ui.error(f"Update failed: {e}")
 
     def _send_loop(self):
-        style = Style.from_dict({"prompt": "bold cyan"})
+        style = Style.from_dict({"prompt": "bold #00ff00"})
         session = PromptSession(
             history=InMemoryHistory(),
             auto_suggest=AutoSuggestFromHistory(),
-            completer=WordCompleter([
-                "/help","/users","/msg","/join","/leave","/rooms","/nick","/create","/clear","/update","/exit"
-            ], ignore_case=True),
+            completer=CommandCompleter(),
             style=style,
         )
 
@@ -350,11 +393,14 @@ class ShadowClient:
                 try:
                     online_count = len(self.online_users)
                     room_label = f"#{self.current_room}"
-                    status = f"[{online_count} online]" if online_count > 0 else "[0 online]"
-                    prompt_text = f"╭─{room_label} {status}\n╰─❯ "
-                    txt = session.prompt(
-                        [("class:prompt", prompt_text)]
-                    ).strip()
+                    status_style = "bold #00aa00" if online_count > 0 else "dim #005500"
+                    status_text = f"[{online_count} online]" if online_count > 0 else "[0 online]"
+                    txt = session.prompt([
+                        ("bold #00ff00", f"┌─({room_label}) "),
+                        (status_style, status_text),
+                        ("", "\n"),
+                        ("bold #00ff00", "└─❯ "),
+                    ]).strip()
                     if not txt:
                         continue
 
@@ -368,6 +414,9 @@ class ShadowClient:
                         continue
                     if txt == "/update":
                         self._self_update()
+                        continue
+                    if txt.startswith("/leave"):
+                        self.ui.error("Feature /leave is disabled. This is a permanent group chat.")
                         continue
 
                     if txt.startswith("/"):
@@ -387,9 +436,14 @@ class ShadowClient:
         self._running = False
         self.connected = False
         if self.sock:
+            try:
+                self.send({"type": "disconnect"})
+                self.sock.shutdown(socket.SHUT_RDWR)
+            except OSError:
+                pass
             try: self.sock.close()
             except OSError: pass
-        print("\nDisconnected. Goodbye!")
+        print("\n└─ Connection closed. Goodbye.")
 
 
 def main():
@@ -399,8 +453,13 @@ def main():
     p.add_argument("--port", type=int, default=None, help="Server port")
     args = p.parse_args()
 
-    host = args.host or os.environ.get("SHADOWNET_HOST") or input(" Server IP: ").strip()
-    port = args.port or (lambda x: int(x) if x else DEFAULT_PORT)(os.environ.get("SHADOWNET_PORT") or input(f" Port [{DEFAULT_PORT}]: ").strip())
+    console = Console()
+    host = args.host or os.environ.get("SHADOWNET_HOST")
+    if not host:
+        host = console.input("[#00ff00]└─[/] [#00ff00]Server IP[/] [#00ff00]:[/] ").strip()
+    port = args.port or (lambda x: int(x) if x else DEFAULT_PORT)(
+        os.environ.get("SHADOWNET_PORT") or console.input(f"[#00ff00]└─[/] [#00ff00]Port[/] [#00ff00]({DEFAULT_PORT})[/] [#00ff00]:[/] ").strip()
+    )
 
     ShadowClient(host=host, port=port).run()
 

@@ -30,14 +30,13 @@ pip install -r requirements.txt
 python darknet.py
 ```
 
-You will be prompted for the server IP and port. Defaults:
-- **Host:** `xx.xx.xx`
-- **Port:** `55555`
+You will be prompted for the server IP and port. Default port: `55555`.
 
-You can also pass them as arguments:
+You can also pass them as arguments or use environment variables:
 
 ```bash
 python darknet.py --host <server_ip> --port <port>
+SHADOWNET_HOST=<ip> SHADOWNET_PORT=<port> python darknet.py
 ```
 
 ## Commands
@@ -48,12 +47,20 @@ python darknet.py --host <server_ip> --port <port>
 | `/users` | Show online users |
 | `/msg <user>` | Send a private message |
 | `/join <room>` | Join a chat room |
-| `/leave` | Leave current room |
 | `/rooms` | List chat rooms |
 | `/nick <name>` | Change username |
 | `/create <room>` | Create a new room |
 | `/clear` | Clear screen |
+| `/update` | Auto-update from remote URL |
 | `/exit` | Disconnect and exit |
+
+## Auto-Update
+
+Set `UPDATE_URL` in the script or use the `SHADOWNET_UPDATE_URL` environment variable to enable `/update`:
+
+```bash
+SHADOWNET_UPDATE_URL="https://raw.githubusercontent.com/username/repo/main/darknet.py" python darknet.py
+```
 
 ## Logging
 
