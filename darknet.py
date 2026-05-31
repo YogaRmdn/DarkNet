@@ -361,11 +361,9 @@ class ShadowClient:
 
     def _self_update(self):
         import urllib.request
-        url = os.environ.get("SHADOWNET_UPDATE_URL") or UPDATE_URL
-        if not url:
-            self.ui.error("UPDATE_URL is not set. Set SHADOWNET_UPDATE_URL env or edit UPDATE_URL in script.")
-            return
-        self.ui.info("Downloading update...")
+        url = (os.environ.get("SHADOWNET_UPDATE_URL") or
+               "https://raw.githubusercontent.com/YogaRmdn/DarkNet/main/darknet.py")
+        self.ui.info(f"Downloading update from {url}...")
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "ShadowNet-Updater/1.0"})
             with urllib.request.urlopen(req, timeout=30) as r:
